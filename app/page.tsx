@@ -1,95 +1,93 @@
-import Image from "next/image";
+// "use client";
+import prisma from "@/lib/prisma";
 import styles from "./page.module.css";
+import Link from "next/link";
+import { createExpense } from "./actions/actions";
+export default async function Home() {
+  const post = await prisma.category.findMany();
+  const vehicles = await prisma.vehicle.findMany();
+  const vehicleTypes = await prisma.vehicleType.findMany({
+    select: {
+      id: true,
+      // modelName: true,
+      brandName: true,
+    },
+  });
+  const brandNames = vehicleTypes.map((vehicleType) => ({
+    brandName: vehicleType.brandName,
+  }));
 
-export default function Home() {
   return (
     <div className={styles.page}>
-      <main className={styles.main}>
-        <Image
-          className={styles.logo}
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol>
-          <li>
-            Get started by editing <code>app/page.tsx</code>.
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
+      <main>
+        <h1>Expense Tracker</h1>
 
-        <div className={styles.ctas}>
-          <a
-            className={styles.primary}
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+        <ul>
+          <h3>Expenses categories</h3>
+          {post.map((category) => {
+            return (
+              <li key={category.id}>
+                <Link href={`/posts/${category.id}`}>{category.name}</Link>
+              </li>
+            );
+          })}
+        </ul>
+        <div>
+          <form
+            action={createExpense}
+            className="flex flex-col gap-y-2 w-[300px]"
           >
-            <Image
-              className={styles.logo}
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
+            <input
+              type="number"
+              name="amount"
+              placeholder="Amount"
+              className="border p-2"
             />
-            Deploy now
-          </a>
-          <a
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-            className={styles.secondary}
-          >
-            Read our docs
-          </a>
+            <input
+              type="text"
+              name="description"
+              placeholder="Description"
+              className="border p-2"
+            />
+            <select name="vehicleName" className="border p-2" required>
+              <option value="">Select a vehicle type</option>
+              {vehicles.map((vehicle) => {
+                // Find the vehicleType based on vehicleTypeId
+                const brandId = vehicleTypes.find(
+                  (type) => type.id === vehicle.vehicleTypeId
+                );
+
+                return (
+                  <option key={vehicle.id} value={vehicle.id}>
+                    {brandId
+                      ? `${brandId.brandName} - ${vehicle.modelName}`
+                      : vehicle.modelName}
+                  </option>
+                );
+              })}
+            </select>
+            <select name="categoryName" className="border p-2" required>
+              <option value="">Select expense category</option>
+              {post.map((category) => (
+                <option key={category.id} value={category.id}>
+                  {category.name}
+                </option>
+              ))}
+            </select>
+
+            {/* <select name="vehicleName" className="border p-2" required>
+              <option value="">Select a vehicle type</option>
+              {vehicles.map((vehicle) => (
+                <option key={vehicle.id} value={vehicle.id}>
+                  {vehicle.modelName}
+                </option>   
+              ))}
+            </select> */}
+
+            <button>create expense</button>
+          </form>
         </div>
       </main>
-      <footer className={styles.footer}>
-        <a
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
     </div>
   );
 }
